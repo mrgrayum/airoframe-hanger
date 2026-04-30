@@ -3,82 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Airoframe™ Hanger Index</title>
+    <title>Airoframe™ Hanger Finder</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #1a1a1a; font-size: 24px; margin-bottom: 10px; text-align: center; }
-        p { text-align: center; color: #666; margin-bottom: 25px; }
-        #search { width: 100%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; transition: border-color 0.3s; }
-        #search:focus { border-color: #007bff; }
-        #results { margin-top: 20px; }
-        .disc-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .disc-item:last-child { border-bottom: none; }
-        .disc-info { font-weight: 600; font-size: 18px; }
-        .hanger-tag { background: #007bff; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
-        .no-results { text-align: center; color: #999; margin-top: 20px; }
+        .container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #1a1a1a; font-size: 24px; margin-bottom: 5px; }
+        p { color: #666; margin-bottom: 25px; font-size: 14px; }
+        
+        .search-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #555; }
+        
+        select, input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; background: white; }
+        select:focus, input:focus { border-color: #007bff; }
+        
+        #result-box { margin-top: 30px; padding: 20px; border-radius: 8px; background: #eef6ff; display: none; border: 1px solid #d0e3ff; }
+        .size-label { font-size: 14px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+        .size-value { font-size: 48px; font-weight: 800; color: #007bff; margin: 10px 0; }
+        .disc-name { font-size: 18px; font-weight: 600; color: #333; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Airoframe™ Hanger Index</h1>
-    <p>Search for a disc to find the compatible hanger size.</p>
+    <h1>Airoframe™ Hanger Finder</h1>
+    <p>Find the perfect fit for your collection.</p>
     
-    <input type="text" id="search" placeholder="Search by brand or mold..." onkeyup="filterDiscs()">
+    <div class="search-group">
+        <label>Step 1: Select Manufacturer</label>
+        <select id="mfg-select" onchange="updateMolds()">
+            <option value="">-- Choose Brand --</option>
+        </select>
+    </div>
 
-    <div id="results">
-        <!-- Results will be injected here -->
+    <div class="search-group">
+        <label>Step 2: Select Disc Name</label>
+        <select id="mold-select" onchange="showResult()" disabled>
+            <option value="">-- Choose Disc --</option>
+        </select>
+    </div>
+
+    <p style="margin: 15px 0;">- OR -</p>
+
+    <div class="search-group">
+        <label>Quick Search</label>
+        <input type="text" id="quick-search" placeholder="Start typing a disc name..." oninput="handleQuickSearch()">
+    </div>
+
+    <div id="result-box">
+        <div class="size-label">Required Hanger Size</div>
+        <div class="size-value" id="res-size">--</div>
+        <div class="disc-name" id="res-name"></div>
     </div>
 </div>
 
 <script>
     let discData = [];
 
-    // Fetches your provided discdata.json file
     fetch('discdata.json')
         .then(response => response.json())
         .then(data => {
-            // Mapping to your specific JSON keys: Manufacturer, Mold, and HangerSize
-            discData = data.map(item => ({
-                manufacturer: item.Manufacturer || "Unknown",
-                mold: item.Mold || "Unknown",
-                size: item.HangerSize || "N/A"
-            }));
-            displayResults(discData);
+            discData = data;
+            populateManufacturers();
         })
-        .catch(err => {
-            console.error('Error loading disc data:', err);
-            document.getElementById('results').innerHTML = '<p class="no-results">Error loading discdata.json. Make sure the file exists in this folder.</p>';
-        });
+        .catch(err => console.error('Error loading JSON:', err));
 
-    function displayResults(data) {
-        const container = document.getElementById('results');
-        container.innerHTML = '';
-
-        if (data.length === 0) {
-            container.innerHTML = '<p class="no-results">No discs found.</p>';
-            return;
-        }
-
-        data.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'disc-item';
-            div.innerHTML = `
-                <div class="disc-info">${item.manufacturer} ${item.mold}</div>
-                <div class="hanger-tag">Size ${item.size}</div>
-            `;
-            container.appendChild(div);
+    function populateManufacturers() {
+        const mfgSelect = document.getElementById('mfg-select');
+        const manufacturers = [...new Set(discData.map(item => item.Manufacturer))].sort();
+        
+        manufacturers.forEach(mfg => {
+            const opt = document.createElement('option');
+            opt.value = mfg;
+            opt.textContent = mfg;
+            mfgSelect.appendChild(opt);
         });
     }
 
-    function filterDiscs() {
-        const query = document.getElementById('search').value.toLowerCase();
-        const filtered = discData.filter(item => 
-            item.mold.toLowerCase().includes(query) || 
-            item.manufacturer.toLowerCase().includes(query)
+    function updateMolds() {
+        const mfg = document.getElementById('mfg-select').value;
+        const moldSelect = document.getElementById('mold-select');
+        moldSelect.innerHTML = '<option value="">-- Choose Disc --</option>';
+        
+        if (!mfg) {
+            moldSelect.disabled = true;
+            return;
+        }
+
+        const filtered = discData.filter(item => item.Manufacturer === mfg).sort((a,b) => a.Mold.localeCompare(b.Mold));
+        filtered.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.Mold;
+            opt.textContent = item.Mold;
+            moldSelect.appendChild(opt);
+        });
+        
+        moldSelect.disabled = false;
+        document.getElementById('result-box').style.display = 'none';
+    }
+
+    function showResult() {
+        const mfg = document.getElementById('mfg-select').value;
+        const mold = document.getElementById('mold-select').value;
+        if (!mfg || !mold) return;
+
+        const disc = discData.find(item => item.Manufacturer === mfg && item.Mold === mold);
+        displayFinal(disc);
+    }
+
+    function handleQuickSearch() {
+        const query = document.getElementById('quick-search').value.toLowerCase();
+        if (query.length < 2) {
+            document.getElementById('result-box').style.display = 'none';
+            return;
+        }
+
+        const disc = discData.find(item => 
+            item.Mold.toLowerCase() === query || 
+            item.Mold.toLowerCase().startsWith(query)
         );
-        displayResults(filtered);
+
+        if (disc) displayFinal(disc);
+    }
+
+    function displayFinal(disc) {
+        const box = document.getElementById('result-box');
+        document.getElementById('res-size').textContent = 'Size ' + disc.HangerSize;
+        document.getElementById('res-name').textContent = disc.Manufacturer + ' ' + disc.Mold;
+        box.style.display = 'block';
     }
 </script>
 
