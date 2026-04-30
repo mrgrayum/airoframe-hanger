@@ -1,137 +1,395 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Airoframe™ Hanger Finder</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; }
-        .container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        h1 { color: #1a1a1a; font-size: 24px; margin-bottom: 5px; }
-        p { color: #666; margin-bottom: 25px; font-size: 14px; }
-        
-        .search-group { margin-bottom: 15px; text-align: left; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #555; }
-        
-        select, input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; background: white; }
-        select:focus, input:focus { border-color: #007bff; }
-        
-        #result-box { margin-top: 30px; padding: 20px; border-radius: 8px; background: #eef6ff; display: none; border: 1px solid #d0e3ff; }
-        .size-label { font-size: 14px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
-        .size-value { font-size: 48px; font-weight: 800; color: #007bff; margin: 10px 0; }
-        .disc-name { font-size: 18px; font-weight: 600; color: #333; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Airoframe™ Hanger Size Selector</title>
+  <style>
+    :root {
+      --text: #0b0f19;
+      --muted: #5b6472;
+      --border: #e6e8ee;
+      --shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+      --bg1: #f7f8fb;
+      --bg2: #ffffff;
+      --infoBg: #f0f7ff;
+      --infoBorder: #cfe6ff;
+      --infoText: #0b3b80;
+      --accent: #3b82f6;
+      --incompatBg: #fef2f2;
+      --incompatBorder: #fee2e2;
+      --incompatText: #991b1b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px 15px 40px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--text);
+      background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    header { margin-bottom: 16px; }
+    h1 { font-size: 20px; letter-spacing: -0.02em; margin: 0; font-weight: 900; }
+    .sub { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      font-weight: 800;
+      font-size: 11px;
+      color: var(--muted);
+      margin: 0 0 6px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    /* Quick search */
+    .search-wrap { margin-bottom: 20px; position: relative; }
+    .global-search {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .global-search:focus { border-color: var(--accent); }
+
+    /* Dropdown results */
+    .results-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 5px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: var(--shadow);
+      display: none;
+    }
+    .result-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--bg1);
+      font-size: 14px;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item:hover { background: var(--infoBg); }
+    .result-item span { color: var(--muted); font-size: 12px; margin-left: 6px; }
+
+    /* Divider */
+    .divider {
+      text-align: center;
+      margin: 15px 0;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+
+    /* Grid for selects */
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+    select {
+      width: 100%;
+      appearance: none;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235b6472' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 12px center;
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus { border-color: var(--accent); }
+    select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Result bubble */
+    .result-bubble {
+      margin-top: 20px;
+      display: none;
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--infoBorder);
+      background: var(--infoBg);
+      text-align: center;
+    }
+    .result-bubble.incompatible {
+      background: var(--incompatBg);
+      border-color: var(--incompatBorder);
+    }
+
+    .result-disc-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .result-status {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--infoText);
+    }
+    .result-bubble.incompatible .result-status {
+      color: var(--incompatText);
+    }
+
+    /* Hanger size display */
+    .hanger-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 10px 0 4px;
+    }
+    .hanger-letter {
+      font-size: 56px;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+    .result-bubble.incompatible .hanger-letter { color: var(--incompatText); }
+    .hanger-detail {
+      text-align: left;
+    }
+    .hanger-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    .hanger-range {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--infoText);
+      margin-top: 2px;
+    }
+    .result-bubble.incompatible .hanger-range { color: var(--incompatText); }
+    .hanger-inner {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <h1>Airoframe™ Hanger Size Selector</h1>
+      <p class="sub">Search or browse discs below to find your required hanger size.</p>
+    </header>
 
-<div class="container">
-    <h1>Airoframe™ Hanger Finder</h1>
-    <p>Find the perfect fit for your collection.</p>
-    
-    <div class="search-group">
-        <label>Step 1: Select Manufacturer</label>
-        <select id="mfg-select" onchange="updateMolds()">
-            <option value="">-- Choose Brand --</option>
-        </select>
+    <div class="card">
+      <!-- Quick Search -->
+      <div class="search-wrap">
+        <label for="globalSearch">Quick Search</label>
+        <input type="text" id="globalSearch" class="global-search" placeholder="Type a disc or manufacturer name..." autocomplete="off">
+        <div id="resultsList" class="results-list"></div>
+      </div>
+
+      <div class="divider">OR BROWSE</div>
+
+      <!-- Dropdowns -->
+      <div class="grid">
+        <div>
+          <label for="manufacturer">Manufacturer</label>
+          <select id="manufacturer"><option value="">Loading...</option></select>
+        </div>
+        <div>
+          <label for="model">Disc Model</label>
+          <select id="model" disabled><option value="">Select Manufacturer</option></select>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-bubble" id="resultBubble">
+        <div class="result-disc-name" id="resultDiscName"></div>
+        <div class="hanger-display">
+          <div class="hanger-letter" id="hangerLetter"></div>
+          <div class="hanger-detail">
+            <div class="hanger-label" id="hangerLabel"></div>
+            <div class="hanger-range" id="hangerRange"></div>
+            <div class="hanger-inner" id="hangerInner"></div>
+          </div>
+        </div>
+        <div class="result-status" id="resultStatus"></div>
+      </div>
     </div>
-
-    <div class="search-group">
-        <label>Step 2: Select Disc Name</label>
-        <select id="mold-select" onchange="showResult()" disabled>
-            <option value="">-- Choose Disc --</option>
-        </select>
-    </div>
-
-    <p style="margin: 15px 0;">- OR -</p>
-
-    <div class="search-group">
-        <label>Quick Search</label>
-        <input type="text" id="quick-search" placeholder="Start typing a disc name..." oninput="handleQuickSearch()">
-    </div>
-
-    <div id="result-box">
-        <div class="size-label">Required Hanger Size</div>
-        <div class="size-value" id="res-size">--</div>
-        <div class="disc-name" id="res-name"></div>
-    </div>
-</div>
+  </div>
 
 <script>
-    let discData = [];
+(function () {
+  // Hanger size definitions: letter, min mm (inclusive), max mm (inclusive)
+  const HANGERS = [
+    { letter: 'A', min: 150, max: 158 },
+    { letter: 'B', min: 159, max: 167 },
+    { letter: 'C', min: 168, max: 176 },
+    { letter: 'D', min: 177, max: 185 },
+    { letter: 'E', min: 186, max: 194 },
+    { letter: 'F', min: 195, max: 203 },
+    { letter: 'G', min: 204, max: 212 },
+    { letter: 'H', min: 213, max: 221 },
+    { letter: 'I', min: 222, max: 230 },
+  ];
 
-    fetch('discdata.json')
-        .then(response => response.json())
-        .then(data => {
-            discData = data;
-            populateManufacturers();
-        })
-        .catch(err => console.error('Error loading JSON:', err));
+  function getHanger(inner_mm) {
+    return HANGERS.find(h => inner_mm >= h.min && inner_mm <= h.max) || null;
+  }
 
-    function populateManufacturers() {
-        const mfgSelect = document.getElementById('mfg-select');
-        const manufacturers = [...new Set(discData.map(item => item.Manufacturer))].sort();
-        
-        manufacturers.forEach(mfg => {
-            const opt = document.createElement('option');
-            opt.value = mfg;
-            opt.textContent = mfg;
-            mfgSelect.appendChild(opt);
+  const elSearch   = document.getElementById('globalSearch');
+  const elResults  = document.getElementById('resultsList');
+  const elMfg      = document.getElementById('manufacturer');
+  const elModel    = document.getElementById('model');
+  const bubble     = document.getElementById('resultBubble');
+  const discName   = document.getElementById('resultDiscName');
+  const hangerLetter = document.getElementById('hangerLetter');
+  const hangerLabel  = document.getElementById('hangerLabel');
+  const hangerRange  = document.getElementById('hangerRange');
+  const hangerInner  = document.getElementById('hangerInner');
+  const resultStatus = document.getElementById('resultStatus');
+
+  let discs = [];
+  let byMfg = new Map();
+  let current = null;
+
+  function render() {
+    if (!current) {
+      bubble.style.display = 'none';
+      return;
+    }
+
+    const inner = Number(current.inner_mm);
+    const hanger = getHanger(inner);
+
+    bubble.style.display = 'block';
+    discName.textContent = current.manufacturer + ' — ' + current.model;
+    hangerInner.textContent = 'Inner rim diameter: ' + inner + ' mm';
+
+    if (hanger) {
+      bubble.classList.remove('incompatible');
+      hangerLetter.textContent = hanger.letter;
+      hangerLabel.textContent = 'Hanger Size';
+      hangerRange.textContent = hanger.min + '–' + hanger.max + ' mm';
+      resultStatus.textContent = '✓ Compatible with Airoframe™';
+    } else {
+      bubble.classList.add('incompatible');
+      hangerLetter.textContent = '✕';
+      hangerLabel.textContent = 'Not Compatible';
+      hangerRange.textContent = inner < 150 ? 'Below 150 mm range' : 'Above 230 mm range';
+      resultStatus.textContent = 'This disc falls outside the supported hanger range (150–230 mm).';
+    }
+  }
+
+  // Quick search
+  elSearch.addEventListener('input', () => {
+    const val = elSearch.value.toLowerCase().trim();
+    elResults.innerHTML = '';
+    if (val.length < 2) { elResults.style.display = 'none'; return; }
+
+    const matches = discs.filter(d =>
+      d.model.toLowerCase().includes(val) ||
+      d.manufacturer.toLowerCase().includes(val)
+    ).slice(0, 12);
+
+    if (matches.length > 0) {
+      elResults.style.display = 'block';
+      matches.forEach(d => {
+        const item = document.createElement('div');
+        item.className = 'result-item';
+        item.innerHTML = `<b>${d.model}</b><span>${d.manufacturer}</span>`;
+        item.addEventListener('click', () => {
+          current = d;
+          elSearch.value = d.model;
+          elResults.style.display = 'none';
+          elMfg.value = d.manufacturer;
+          updateModelDropdown(d.manufacturer);
+          elModel.value = d.model;
+          render();
         });
+        elResults.appendChild(item);
+      });
+    } else {
+      elResults.style.display = 'none';
     }
+  });
 
-    function updateMolds() {
-        const mfg = document.getElementById('mfg-select').value;
-        const moldSelect = document.getElementById('mold-select');
-        moldSelect.innerHTML = '<option value="">-- Choose Disc --</option>';
-        
-        if (!mfg) {
-            moldSelect.disabled = true;
-            return;
-        }
+  document.addEventListener('click', e => {
+    if (e.target !== elSearch) elResults.style.display = 'none';
+  });
 
-        const filtered = discData.filter(item => item.Manufacturer === mfg).sort((a,b) => a.Mold.localeCompare(b.Mold));
-        filtered.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.Mold;
-            opt.textContent = item.Mold;
-            moldSelect.appendChild(opt);
-        });
-        
-        moldSelect.disabled = false;
-        document.getElementById('result-box').style.display = 'none';
+  function updateModelDropdown(mfg) {
+    const list = byMfg.get(mfg) || [];
+    elModel.disabled = !mfg;
+    elModel.innerHTML = '<option value="">Select Model...</option>' +
+      list.map(d => d.model).sort().map(m => `<option value="${m}">${m}</option>`).join('');
+  }
+
+  elMfg.addEventListener('change', () => {
+    updateModelDropdown(elMfg.value);
+    elSearch.value = '';
+    current = null;
+    render();
+  });
+
+  elModel.addEventListener('change', () => {
+    const mfg = elMfg.value;
+    const modelVal = elModel.value;
+    current = (byMfg.get(mfg) || []).find(d => d.model === modelVal) || null;
+    if (current) elSearch.value = current.model;
+    render();
+  });
+
+  async function init() {
+    try {
+      const res = await fetch('./discs.json', { cache: 'no-store' });
+      discs = await res.json();
+      discs.forEach(d => {
+        if (!byMfg.has(d.manufacturer)) byMfg.set(d.manufacturer, []);
+        byMfg.get(d.manufacturer).push(d);
+      });
+      const mfgs = Array.from(byMfg.keys()).sort();
+      elMfg.innerHTML = '<option value="">Select Manufacturer...</option>' +
+        mfgs.map(m => `<option value="${m}">${m}</option>`).join('');
+    } catch (e) {
+      console.error('Failed to load discs.json:', e);
+      elMfg.innerHTML = '<option value="">Error loading data</option>';
     }
+  }
 
-    function showResult() {
-        const mfg = document.getElementById('mfg-select').value;
-        const mold = document.getElementById('mold-select').value;
-        if (!mfg || !mold) return;
-
-        const disc = discData.find(item => item.Manufacturer === mfg && item.Mold === mold);
-        displayFinal(disc);
-    }
-
-    function handleQuickSearch() {
-        const query = document.getElementById('quick-search').value.toLowerCase();
-        if (query.length < 2) {
-            document.getElementById('result-box').style.display = 'none';
-            return;
-        }
-
-        const disc = discData.find(item => 
-            item.Mold.toLowerCase() === query || 
-            item.Mold.toLowerCase().startsWith(query)
-        );
-
-        if (disc) displayFinal(disc);
-    }
-
-    function displayFinal(disc) {
-        const box = document.getElementById('result-box');
-        document.getElementById('res-size').textContent = 'Size ' + disc.HangerSize;
-        document.getElementById('res-name').textContent = disc.Manufacturer + ' ' + disc.Mold;
-        box.style.display = 'block';
-    }
+  init();
+})();
 </script>
-
 </body>
 </html>
