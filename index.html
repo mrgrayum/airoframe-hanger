@@ -169,7 +169,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 12px;
       margin: 10px 0 4px;
     }
     .hanger-letter {
@@ -180,27 +180,12 @@
       letter-spacing: -0.03em;
     }
     .result-bubble.incompatible .hanger-letter { color: var(--incompatText); }
-    .hanger-detail {
-      text-align: left;
-    }
     .hanger-label {
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--muted);
-    }
-    .hanger-range {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--infoText);
-      margin-top: 2px;
-    }
-    .result-bubble.incompatible .hanger-range { color: var(--incompatText); }
-    .hanger-inner {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
     }
   </style>
 </head>
@@ -238,11 +223,7 @@
         <div class="result-disc-name" id="resultDiscName"></div>
         <div class="hanger-display">
           <div class="hanger-letter" id="hangerLetter"></div>
-          <div class="hanger-detail">
-            <div class="hanger-label" id="hangerLabel"></div>
-            <div class="hanger-range" id="hangerRange"></div>
-            <div class="hanger-inner" id="hangerInner"></div>
-          </div>
+          <div class="hanger-label" id="hangerLabel"></div>
         </div>
         <div class="result-status" id="resultStatus"></div>
       </div>
@@ -276,8 +257,6 @@
   const discName   = document.getElementById('resultDiscName');
   const hangerLetter = document.getElementById('hangerLetter');
   const hangerLabel  = document.getElementById('hangerLabel');
-  const hangerRange  = document.getElementById('hangerRange');
-  const hangerInner  = document.getElementById('hangerInner');
   const resultStatus = document.getElementById('resultStatus');
 
   let discs = [];
@@ -295,19 +274,16 @@
 
     bubble.style.display = 'block';
     discName.textContent = current.manufacturer + ' — ' + current.model;
-    hangerInner.textContent = 'Inner rim diameter: ' + inner + ' mm';
 
     if (hanger) {
       bubble.classList.remove('incompatible');
       hangerLetter.textContent = hanger.letter;
       hangerLabel.textContent = 'Hanger Size';
-      hangerRange.textContent = hanger.min + '–' + hanger.max + ' mm';
       resultStatus.textContent = '✓ Compatible with Airoframe™';
     } else {
       bubble.classList.add('incompatible');
       hangerLetter.textContent = '✕';
       hangerLabel.textContent = 'Not Compatible';
-      hangerRange.textContent = inner < 150 ? 'Below 150 mm range' : 'Above 230 mm range';
       resultStatus.textContent = 'This disc falls outside the supported hanger range (150–230 mm).';
     }
   }
