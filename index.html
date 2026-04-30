@@ -29,8 +29,7 @@
       color: var(--text);
       background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
       min-height: 100vh;
-    }
-    .wrap { max-width: 980px; margin: 0 auto; }
+    }    .wrap { max-width: 980px; margin: 0 auto; }
     header { margin-bottom: 16px; }
     h1 { font-size: 20px; letter-spacing: -0.02em; margin: 0; font-weight: 900; }
     .sub { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
@@ -263,9 +262,16 @@
   let byMfg = new Map();
   let current = null;
 
+  function sendHeight() {
+    setTimeout(() => {
+      window.parent.postMessage({ frameHeight: document.body.scrollHeight }, '*');
+    }, 100);
+  }
+
   function render() {
     if (!current) {
       bubble.style.display = 'none';
+      sendHeight();
       return;
     }
 
@@ -286,6 +292,7 @@
       hangerLabel.textContent = '';
       resultStatus.textContent = '✕ Not compatible with Airoframe™';
     }
+    sendHeight();
   }
 
   // Quick search
@@ -319,6 +326,7 @@
     } else {
       elResults.style.display = 'none';
     }
+    sendHeight();
   });
 
   document.addEventListener('click', e => {
@@ -358,6 +366,7 @@
       const mfgs = Array.from(byMfg.keys()).sort();
       elMfg.innerHTML = '<option value="">Select Manufacturer...</option>' +
         mfgs.map(m => `<option value="${m}">${m}</option>`).join('');
+      sendHeight();
     } catch (e) {
       console.error('Failed to load discs.json:', e);
       elMfg.innerHTML = '<option value="">Error loading data</option>';
