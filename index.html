@@ -25,7 +25,7 @@
     <h1>Airoframe™ Hanger Index</h1>
     <p>Search for a disc to find the compatible hanger size.</p>
     
-    <input type="text" id="search" placeholder="Type disc name (e.g. Envy, Buzzz)..." onkeyup="filterDiscs()">
+    <input type="text" id="search" placeholder="Search by brand or mold..." onkeyup="filterDiscs()">
 
     <div id="results">
         <!-- Results will be injected here -->
@@ -35,14 +35,22 @@
 <script>
     let discData = [];
 
-    // Load the JSON data from your repository
+    // Fetches your provided discdata.json file
     fetch('discdata.json')
         .then(response => response.json())
         .then(data => {
-            discData = data;
+            // Mapping to your specific JSON keys: Manufacturer, Mold, and HangerSize
+            discData = data.map(item => ({
+                manufacturer: item.Manufacturer || "Unknown",
+                mold: item.Mold || "Unknown",
+                size: item.HangerSize || "N/A"
+            }));
             displayResults(discData);
         })
-        .catch(err => console.error('Error loading disc data:', err));
+        .catch(err => {
+            console.error('Error loading disc data:', err);
+            document.getElementById('results').innerHTML = '<p class="no-results">Error loading discdata.json. Make sure the file exists in this folder.</p>';
+        });
 
     function displayResults(data) {
         const container = document.getElementById('results');
@@ -57,8 +65,8 @@
             const div = document.createElement('div');
             div.className = 'disc-item';
             div.innerHTML = `
-                <div class="disc-info">${item.Manufacturer} ${item.Mold}</div>
-                <div class="hanger-tag">Size ${item.HangerSize}</div>
+                <div class="disc-info">${item.manufacturer} ${item.mold}</div>
+                <div class="hanger-tag">Size ${item.size}</div>
             `;
             container.appendChild(div);
         });
@@ -67,8 +75,8 @@
     function filterDiscs() {
         const query = document.getElementById('search').value.toLowerCase();
         const filtered = discData.filter(item => 
-            item.Mold.toLowerCase().includes(query) || 
-            item.Manufacturer.toLowerCase().includes(query)
+            item.mold.toLowerCase().includes(query) || 
+            item.manufacturer.toLowerCase().includes(query)
         );
         displayResults(filtered);
     }
